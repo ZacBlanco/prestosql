@@ -93,7 +93,7 @@ public final class S3SelectPushdown
         if (inputFormat instanceof TextInputFormat) {
             return getCompressionCodec((TextInputFormat) inputFormat, path)
                     .map(codec -> (codec instanceof GzipCodec) || (codec instanceof BZip2Codec))
-                    .orElse(true);
+                    .orElse(false); // TODO fix S3 Select when file not compressed
         }
 
         return false;
