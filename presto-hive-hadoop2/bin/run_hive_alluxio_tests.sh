@@ -54,7 +54,7 @@ function main () {
 
   export HADOOP_MASTER_IP=$(hadoop_master_ip)
   export ALLUXIO_BASE_IMAGE="alluxio/alluxio"
-  export ALLUXIO_IMAGE_TAG="2.1.1"
+  export ALLUXIO_IMAGE_TAG="2.2.0-SNAPSHOT"
 
   start_alluxio_containers
 
@@ -74,7 +74,12 @@ function main () {
   # run product tests
   pushd ${PROJECT_ROOT}
   set +e
-  ./mvnw -B -am -pl presto-hive-hadoop2 test -P test-hive-hadoop2-alluxio \
+  ./mvnw -B -am -pl presto-hive-hadoop2 install -P test-hive-hadoop2-alluxio \
+    -DskipTests \
+    -Dhive.hadoop2.alluxio.host=localhost \
+    -Dhive.hadoop2.alluxio.port=19998 \
+    -DHADOOP_USER_NAME=hive
+  ./mvnw -B -pl presto-hive-hadoop2 test -P test-hive-hadoop2-alluxio \
     -Dhive.hadoop2.alluxio.host=localhost \
     -Dhive.hadoop2.alluxio.port=19998 \
     -DHADOOP_USER_NAME=hive
