@@ -54,7 +54,7 @@ function main () {
 
   export HADOOP_MASTER_IP=$(hadoop_master_ip)
   export ALLUXIO_BASE_IMAGE="alluxio/alluxio"
-  export ALLUXIO_IMAGE_TAG="2.2.0-SNAPSHOT"
+  export ALLUXIO_IMAGE_TAG="2.1.1"
 
   start_alluxio_containers
 
