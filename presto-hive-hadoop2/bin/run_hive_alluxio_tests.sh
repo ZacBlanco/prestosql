@@ -62,6 +62,7 @@ function main () {
   exec_in_hadoop_master_container sudo -Eu hdfs hdfs dfs -mkdir /alluxio
   exec_in_hadoop_master_container sudo -Eu hdfs hdfs dfs -chmod 777 /alluxio
   exec_in_hadoop_master_container sudo -Eu hive beeline -u jdbc:hive2://localhost:10000/default -n hive -f /docker/sql/create-test.sql
+  exec_in_hadoop_master_container sudo -Eu hive beeline -u jdbc:hive2://localhost:10000/default -n hive -f "/files/sql/create-test-hive-${TESTS_HIVE_VERSION_MAJOR}.sql"
 
   # Alluxio currently doesn't support views
   exec_in_hadoop_master_container sudo -Eu hive beeline -u jdbc:hive2://localhost:10000/default -n hive -e 'DROP VIEW presto_test_view;'
@@ -74,14 +75,11 @@ function main () {
   # run product tests
   pushd ${PROJECT_ROOT}
   set +e
-  ./mvnw -B -am -pl presto-hive-hadoop2 install -P test-hive-hadoop2-alluxio \
-    -DskipTests \
-    -Dhive.hadoop2.alluxio.host=localhost \
-    -Dhive.hadoop2.alluxio.port=19998 \
-    -DHADOOP_USER_NAME=hive
   ./mvnw -B -pl presto-hive-hadoop2 test -P test-hive-hadoop2-alluxio \
     -Dhive.hadoop2.alluxio.host=localhost \
     -Dhive.hadoop2.alluxio.port=19998 \
+    -Dhive.hadoop2.hiveVersionMajor="${TESTS_HIVE_VERSION_MAJOR}" \
+    -Dhive.hadoop2.timeZone=Asia/Kathmandu \
     -DHADOOP_USER_NAME=hive
   EXIT_CODE=$?
   set -e

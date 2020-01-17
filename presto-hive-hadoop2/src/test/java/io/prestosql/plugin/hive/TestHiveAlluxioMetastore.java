@@ -19,9 +19,14 @@ import io.prestosql.plugin.hive.metastore.HiveMetastore;
 import io.prestosql.plugin.hive.metastore.alluxio.AlluxioHiveMetastore;
 import io.prestosql.plugin.hive.metastore.alluxio.AlluxioHiveMetastoreConfig;
 import io.prestosql.plugin.hive.metastore.alluxio.AlluxioMetastoreModule;
+import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+import static io.prestosql.plugin.hive.HiveTestUtils.getHiveConfig;
 
 public class TestHiveAlluxioMetastore
         extends AbstractTestHive
@@ -29,19 +34,27 @@ public class TestHiveAlluxioMetastore
     private static final String SCHEMA = "default";
 
     private String alluxioAddress;
+    private int hiveVersionMajor;
 
     @Parameters({
             "hive.hadoop2.alluxio.host",
-            "hive.hadoop2.alluxio.port"
+            "hive.hadoop2.alluxio.port",
+            "hive.hadoop2.hiveVersionMajor",
+            "hive.hadoop2.timeZone"
     })
     @BeforeClass
-    public void setup(String host, String port)
+    public void setup(String host, String port, int hiveVersionMajor, String timeZone)
     {
         this.alluxioAddress = host + ":" + port;
         System.out.println(this.alluxioAddress);
         System.setProperty(PropertyKey.Name.SECURITY_LOGIN_USERNAME, "presto");
         System.setProperty(PropertyKey.Name.MASTER_HOSTNAME, host);
-        setup(SCHEMA, new HiveConfig(), createMetastore());
+        HiveConfig hiveConfig = getHiveConfig();
+        hiveConfig.setTimeZone(timeZone);
+        setup(SCHEMA, hiveConfig, createMetastore());
+
+        checkArgument(hiveVersionMajor > 0, "Invalid hiveVersionMajor: %s", hiveVersionMajor);
+        this.hiveVersionMajor = hiveVersionMajor;
     }
 
     HiveMetastore createMetastore()
@@ -104,6 +117,22 @@ public class TestHiveAlluxioMetastore
     public void testEmptyTextFile()
     {
         // Alluxio metastore does not support create operations
+    }
+
+    private int getHiveVersionMajor()
+    {
+        checkState(hiveVersionMajor > 0, "hiveVersionMajor not set");
+        return hiveVersionMajor;
+    }
+
+    @Override
+    public void testGetPartitionSplitsTableOfflinePartition()
+    {
+        if (getHiveVersionMajor() >= 2) {
+            throw new SkipException("ALTER TABLE .. ENABLE OFFLINE was removed in Hive 2.0 and this is a prerequisite for this test");
+        }
+
+        super.testGetPartitionSplitsTableOfflinePartition();
     }
 
     @Override
