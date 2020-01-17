@@ -56,6 +56,12 @@ public class TestHiveAlluxioMetastore
         this.hiveVersionMajor = hiveVersionMajor;
     }
 
+    private int getHiveVersionMajor()
+    {
+        checkState(hiveVersionMajor > 0, "hiveVersionMajor not set");
+        return hiveVersionMajor;
+    }
+
     @Override
     public void testBucketSortedTables()
     {
@@ -108,12 +114,6 @@ public class TestHiveAlluxioMetastore
     public void testEmptyTextFile()
     {
         // Alluxio metastore does not support create operations
-    }
-
-    private int getHiveVersionMajor()
-    {
-        checkState(hiveVersionMajor > 0, "hiveVersionMajor not set");
-        return hiveVersionMajor;
     }
 
     @Override
