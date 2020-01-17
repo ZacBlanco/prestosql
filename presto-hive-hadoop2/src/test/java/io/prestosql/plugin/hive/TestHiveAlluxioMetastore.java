@@ -15,7 +15,6 @@ package io.prestosql.plugin.hive;
 
 import alluxio.client.table.TableMasterClient;
 import alluxio.conf.PropertyKey;
-import io.prestosql.plugin.hive.metastore.HiveMetastore;
 import io.prestosql.plugin.hive.metastore.alluxio.AlluxioHiveMetastore;
 import io.prestosql.plugin.hive.metastore.alluxio.AlluxioHiveMetastoreConfig;
 import io.prestosql.plugin.hive.metastore.alluxio.AlluxioMetastoreModule;
@@ -26,7 +25,6 @@ import org.testng.annotations.Test;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static io.prestosql.plugin.hive.HiveTestUtils.getHiveConfig;
 
 public class TestHiveAlluxioMetastore
         extends AbstractTestHive
@@ -40,7 +38,7 @@ public class TestHiveAlluxioMetastore
             "hive.hadoop2.alluxio.host",
             "hive.hadoop2.alluxio.port",
             "hive.hadoop2.hiveVersionMajor",
-            "hive.hadoop2.timeZone"
+            "hive.hadoop2.timeZone",
     })
     @BeforeClass
     public void setup(String host, String port, int hiveVersionMajor, String timeZone)
@@ -51,18 +49,14 @@ public class TestHiveAlluxioMetastore
         System.setProperty(PropertyKey.Name.MASTER_HOSTNAME, host);
         HiveConfig hiveConfig = getHiveConfig();
         hiveConfig.setTimeZone(timeZone);
-        setup(SCHEMA, hiveConfig, createMetastore());
 
-        checkArgument(hiveVersionMajor > 0, "Invalid hiveVersionMajor: %s", hiveVersionMajor);
-        this.hiveVersionMajor = hiveVersionMajor;
-    }
-
-    HiveMetastore createMetastore()
-    {
         AlluxioHiveMetastoreConfig alluxioConfig = new AlluxioHiveMetastoreConfig();
         alluxioConfig.setMasterAddress(this.alluxioAddress);
         TableMasterClient client = AlluxioMetastoreModule.createCatalogMasterClient(alluxioConfig);
-        return new AlluxioHiveMetastore(client);
+        setup(SCHEMA, hiveConfig, new AlluxioHiveMetastore(client));
+
+        checkArgument(hiveVersionMajor > 0, "Invalid hiveVersionMajor: %s", hiveVersionMajor);
+        this.hiveVersionMajor = hiveVersionMajor;
     }
 
     @Override
@@ -139,6 +133,12 @@ public class TestHiveAlluxioMetastore
     public void testHiveViewsAreNotSupported()
     {
         // Alluxio metastore does not support insert/update operations
+    }
+
+    @Override
+    public void testIllegalStorageFormatDuringTableScan()
+    {
+        // Alluxio metastore does not support create operations
     }
 
     @Override
